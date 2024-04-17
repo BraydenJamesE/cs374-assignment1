@@ -15,15 +15,15 @@ struct MovieData {
     int year;
     char languages[MAX_NUM_OF_LANGUAGES][LANGUAGE_MAX_LENGTH];
     float rating;
-    struct MovieData *leftNeighbor;
     struct MovieData *rightNeighbor;
+    int amountOfLanguages;
 };
 
 struct MovieData *head;
 
 int promptUser() {
     int input = 0;
-    printf("1. Show movies released in the specified year \n");
+    printf("\n1. Show movies released in the specified year \n");
     printf("2. Show highest rated movie for each year \n");
     printf("3. Show the title and year of release of all movies in a specific language \n");
     printf("4. Exit from the program \n");
@@ -32,9 +32,10 @@ int promptUser() {
     return input;
 }
 
-void getMoviesFromYear(int yearInput) {
+void printMoviesFromYear(int yearInput) {
     struct MovieData *currentMovie = head;
     int numberOfMovies = 0;
+    printf("\n");
     for(int i = 0; i < actualNumberOfMovies; i++) {
         if(currentMovie->year == yearInput) {
             printf("%s\n", currentMovie->title);
@@ -43,7 +44,7 @@ void getMoviesFromYear(int yearInput) {
         currentMovie = currentMovie->rightNeighbor;
     }
     if (numberOfMovies == 0) {
-        printf("\nNo data about movies released in the year %d\n\n", yearInput);
+        printf("No data about movies released in the year %d\n", yearInput);
     }
 }
 
@@ -54,6 +55,7 @@ void getHighestRatedMoviePerYear() {
     struct MovieData *movieToPrint;
     int year = 0;
     int yearIndex = 0;
+    printf("\n");
     for(int i = 0; i < actualNumberOfMovies; i++) {
         year = firstLoopMovie->year;
         yearIndex = year - 1900;
@@ -72,6 +74,26 @@ void getHighestRatedMoviePerYear() {
         firstLoopMovie = firstLoopMovie->rightNeighbor;
     }
     printf("\n");
+}
+
+void printMoviesWithSpecificLanguage(char *language) {
+    struct MovieData *currentNode = head;
+    int numberOfMoviesWithLanguage = 1;
+    for(int i = 0; i < actualNumberOfMovies; i++) {
+        for(int j = 0; j < currentNode->amountOfLanguages; j++) {
+            if (strcmp(currentNode->languages[j], language)) {
+                if(numberOfMoviesWithLanguage == 1)
+                    printf("\n");
+                printf("%d %s \n", currentNode->year, currentNode->title);
+                numberOfMoviesWithLanguage++;
+            }
+        }
+        currentNode = currentNode->rightNeighbor;
+    }
+    printf("\n");
+    if (numberOfMoviesWithLanguage == 0) {
+        printf("No data about movies released in %s \n", language);
+    }
 }
 
 
@@ -95,7 +117,6 @@ int main(int argc, char **argv) {
                 } else {
                     struct MovieData *newMovie = malloc(sizeof(struct MovieData));
                     currentMovie->rightNeighbor = newMovie;
-                    newMovie->leftNeighbor = currentMovie;
                     currentMovie = newMovie;
                 }
 
@@ -142,6 +163,7 @@ int main(int argc, char **argv) {
                         if (breakLoop)
                             break;
                     }
+                    currentMovie->amountOfLanguages = numberOfLanguagesIndex;
                 }
 
                 token = strtok(NULL, DELIMITER); // reading the rating
@@ -153,7 +175,6 @@ int main(int argc, char **argv) {
                 index++;
             } else {
                 actualNumberOfMovies = index;
-                head->leftNeighbor = currentMovie;
                 currentMovie->rightNeighbor = head;
                 break;
             }
@@ -164,26 +185,27 @@ int main(int argc, char **argv) {
     while (true) {
         int userRequest = promptUser();
         int year = 0;
+        char * language;
         switch(userRequest) {
             case 1: // show movie released in specific year
                 printf("Enter the year for which you want to see movies: ");
                 scanf("%d", &year);
-                getMoviesFromYear(year);
+                printMoviesFromYear(year);
                 year = 0;
                 break;
             case 2: // show highest rated movie for each year
                 getHighestRatedMoviePerYear();
                 break;
             case 3: // show the title and year of release of all movies in a specific language
-                printf("choice 3");
+                printf("Enter the language for which you want to see movies: ");
+                scanf("%s", language);
+                printMoviesWithSpecificLanguage(language);
                 break;
             case 4: // Exit from the program
-                printf("choice 4");
                 return 0;
             default:
-                printf("You entered an incorrect choice. Try again.");
+                printf("\nYou entered an incorrect choice. Try again.\n\n");
         }
-
     }
 
     struct MovieData *printMovie = head;
