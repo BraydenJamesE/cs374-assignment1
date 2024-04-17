@@ -5,7 +5,6 @@
 
 #define DELIMITER ","
 
-const int NUMBER_OF_MOVIES = 50;
 const int CHAR_SIZE = 1001;
 const int LANGUAGE_MAX_LENGTH = 21;
 const int MAX_NUM_OF_LANGUAGES = 5;
@@ -20,9 +19,65 @@ struct MovieData {
     struct MovieData *rightNeighbor;
 };
 
+struct MovieData *head;
+
+int promptUser() {
+    int input = 0;
+    printf("1. Show movies released in the specified year \n");
+    printf("2. Show highest rated movie for each year \n");
+    printf("3. Show the title and year of release of all movies in a specific language \n");
+    printf("4. Exit from the program \n");
+    printf("Enter a choice from 1 to 4: ");
+    scanf("%d", &input);
+    return input;
+}
+
+void getMoviesFromYear(int yearInput) {
+    struct MovieData *currentMovie = head;
+    int numberOfMovies = 0;
+    for(int i = 0; i < actualNumberOfMovies; i++) {
+        if(currentMovie->year == yearInput) {
+            printf("%s\n", currentMovie->title);
+            numberOfMovies++;
+        }
+        currentMovie = currentMovie->rightNeighbor;
+    }
+    if (numberOfMovies == 0) {
+        printf("\nNo data about movies released in the year %d\n\n", yearInput);
+    }
+}
+
+void getHighestRatedMoviePerYear() {
+    int yearVisited[122] = {0};
+    struct MovieData *firstLoopMovie = head;
+    struct MovieData *secondLoopMovie;
+    struct MovieData *movieToPrint;
+    int year = 0;
+    int yearIndex = 0;
+    for(int i = 0; i < actualNumberOfMovies; i++) {
+        year = firstLoopMovie->year;
+        yearIndex = year - 1900;
+        if(yearVisited[yearIndex] == 0) {
+            yearVisited[yearIndex] = 1;
+            movieToPrint = firstLoopMovie;
+            secondLoopMovie = firstLoopMovie->rightNeighbor;
+            for(int j = 0; j < actualNumberOfMovies - (i + 1); j++) {
+                if(secondLoopMovie->rating > movieToPrint->rating && secondLoopMovie->year == movieToPrint->year) {
+                    movieToPrint = secondLoopMovie;
+                }
+                secondLoopMovie = secondLoopMovie->rightNeighbor;
+            }
+            printf("%d %.1f %s \n", movieToPrint->year, movieToPrint->rating, movieToPrint->title);
+        }
+        firstLoopMovie = firstLoopMovie->rightNeighbor;
+    }
+    printf("\n");
+}
+
+
 int main(int argc, char **argv) {
-    struct MovieData *head = malloc(sizeof(struct MovieData));
-    //struct MovieData *movies = malloc(NUMBER_OF_MOVIES * sizeof(struct MovieData));
+    struct MovieData *fakeHead = malloc(sizeof(struct MovieData));
+    head = fakeHead;
     char fileContent[CHAR_SIZE];
     FILE *fileHandler = fopen(argv[1], "r");
 
@@ -94,6 +149,7 @@ int main(int argc, char **argv) {
                     float rating = atof(token);
                     currentMovie->rating = rating;
                 }
+
                 index++;
             } else {
                 actualNumberOfMovies = index;
@@ -104,11 +160,41 @@ int main(int argc, char **argv) {
         }
         fclose(fileHandler);
     }
-    struct MovieData *printMovie = head->leftNeighbor;
+
+    while (true) {
+        int userRequest = promptUser();
+        int year = 0;
+        switch(userRequest) {
+            case 1: // show movie released in specific year
+                printf("Enter the year for which you want to see movies: ");
+                scanf("%d", &year);
+                getMoviesFromYear(year);
+                year = 0;
+                break;
+            case 2: // show highest rated movie for each year
+                getHighestRatedMoviePerYear();
+                break;
+            case 3: // show the title and year of release of all movies in a specific language
+                printf("choice 3");
+                break;
+            case 4: // Exit from the program
+                printf("choice 4");
+                return 0;
+            default:
+                printf("You entered an incorrect choice. Try again.");
+        }
+
+    }
+
+    struct MovieData *printMovie = head;
     for(int i = 0; i < actualNumberOfMovies; i++) {
         printf("%d: %s \n", i + 1, printMovie->title);
-        printMovie = printMovie->leftNeighbor;
+        printMovie = printMovie->rightNeighbor;
     }
+
+
+
+
 //    printf("%s -> %d -> %s -> %.1f", head->leftNeighbor->title, head->year, head->languages[1], head->rating);
 //    printf("\n Actual Number of Movies: %d", actualNumberOfMovies);
 
